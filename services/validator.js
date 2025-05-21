@@ -1,23 +1,51 @@
 import errors from 'restify-errors';
 import * as properties from '../properties/properties.js';
 import * as utils from '../services/utils.js';
-import { getInstance } from '../services/logger.js'; const logger = getInstance();
+import * as apiDb from '../databases/api/mongodb.js';
+import { getInstance } from '../services/logger.js';
 
-export function check_hash(req, res, next) {
-    if(check_hash_socket(req.params.uid, req.params.hash)){
-		return next();
-	}
-    return next(new errors.ForbiddenError());
+const logger = getInstance();
+
+export async function check_hash(req, res) {
+    const tenant = req.header('x-tenant');
+    let users_secret = properties.getEsupProperty('users_secret');
+    if (tenant) {
+        const dbTenant = await apiDb.find_tenant_by_name(tenant);
+        if (!dbTenant) {
+            throw new errors.BadRequestError();
+        }
+        users_secret = dbTenant.users_secret;
+    }
+
+    if (!check_hash_socket(req.params.uid, req.params.hash, users_secret)) {
+        throw new errors.ForbiddenError();
+    }
 }
 
-export function check_hash_socket(uid, hash) {
-    const hashes = utils.get_hash(uid);
+export function check_hash_socket(uid, hash, users_secret) {
+    const hashes = utils.get_hash(uid, users_secret);
     return hashes.includes(hash);
 }
 
-export function check_api_password(req, res, next) {
+export async function check_api_password(req, res) {
+    const tenant = req.header('x-tenant');
+    let api_password = properties.getEsupProperty('api_password');
+    if (tenant) {
+        const dbTenant = await apiDb.find_tenant_by_name(tenant);
+        if (!dbTenant) {
+            throw new errors.BadRequestError();
+        }
+        api_password = dbTenant.api_password;
+    }
     const reqApiPwd = req.params.api_password || utils.get_auth_bearer(req.headers);
-    if (reqApiPwd == properties.getEsupProperty('api_password')) return next();
+    if (reqApiPwd != api_password) {
+        throw new errors.ForbiddenError();
+    }
+}
+
+export function check_admin_password(req, res, next) {
+    const reqApiPwd = utils.get_auth_bearer(req.headers);
+    if (reqApiPwd == properties.getEsupProperty('admin_password')) return next();
     else return next(new errors.ForbiddenError());
 }
 
