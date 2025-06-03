@@ -20,6 +20,12 @@ const methods = {};
 export let apiDb;
 
 export async function initialize(initializedApiDb) {
+    for (const methodName in properties.getEsupProperty("methods")) {
+        logger.debug("initializing method " + methodName);
+        const method = await import(`../methods/${methodName}.js`);
+        methods[method.name] = method;
+    }
+
     if (initializedApiDb) {
         apiDb = initializedApiDb;
     } else {
@@ -30,11 +36,6 @@ export async function initialize(initializedApiDb) {
         } else {
             throw new Error('Unknown apiDb');
         }
-    }
-
-    for (const methodName in properties.getEsupProperty("methods")) {
-        const method = await import(`../methods/${methodName}.js`);
-        methods[method.name] = method;
     }
 }
 
