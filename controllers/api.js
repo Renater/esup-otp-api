@@ -4,11 +4,15 @@ import * as fileUtils from '../services/fileUtils.js';
 import * as properties from '../properties/properties.js';
 import * as controllerUtils from './controllerUtils.js';
 import * as errors from '../services/errors.js';
-import methods from '../methods/methods.js';
 import * as transports from '../transports/transports.js';
 
 import { getInstance } from '../services/logger.js';
 const logger = getInstance();
+
+/**
+ * @type { Object.<Method['name']:Method> }
+ */
+const methods = {};
 
 /**
  * @type {import('../databases/api/mongodb.js')} apiDb
@@ -26,6 +30,11 @@ export async function initialize(initializedApiDb) {
         } else {
             throw new Error('Unknown apiDb');
         }
+    }
+
+    for (const methodName in properties.getEsupProperty("methods")) {
+        const method = await import(`../methods/${methodName}.js`);
+        methods[method.name] = method;
     }
 }
 
