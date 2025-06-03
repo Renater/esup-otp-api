@@ -4,11 +4,15 @@ import * as fileUtils from '../services/fileUtils.js';
 import * as properties from '../properties/properties.js';
 import * as controllerUtils from './controllerUtils.js';
 import * as errors from '../services/errors.js';
-import methods from '../methods/methods.js';
 import * as transports from '../transports/transports.js';
 
 import { getInstance } from '../services/logger.js';
 const logger = getInstance();
+
+/**
+ * @type { Object.<Method['name']:Method> }
+ */
+const methods = {};
 
 /**
  * @type {import('../databases/api/mongodb.js')} apiDb
@@ -26,6 +30,11 @@ export async function initialize(initializedApiDb) {
         } else {
             throw new Error('Unknown apiDb');
         }
+    }
+
+    for (const methodName in properties.getEsupProperty("methods")) {
+        const method = await import(`../methods/${methodName}.js`);
+        methods[method.name] = method;
     }
 }
 
@@ -579,6 +588,54 @@ export async function desync(req, res) {
  */
 export async function get_uids(req, res) {
     return apiDb.get_uids(req, res);
+}
+
+/**
+ * Get all Tenants
+ */
+export async function get_tenants(req, res) {
+    const result = await apiDb.get_tenants(req, res);
+    res.send(200, result);
+}
+
+/**
+ * Get tenant by name
+ */
+export async function get_tenant(req, res) {
+    const tenant = await apiDb.find_tenant_by_id(req, res);
+    if(tenant) {
+        const response = {
+            name: tenant.name, 
+            scopes: tenant.scopes,
+            webauthn: tenant.webauthn, 
+            api_password: tenant.api_password,
+            users_secret: tenant.users_secret
+        };
+
+        res.send(200, response);
+    } else {
+        res.send(404);
+    }
+
+}
+
+export async function create_tenant(req, res) {
+    await apiDb.create_tenant(req, res);
+    res.send(201);
+}
+
+export async function update_tenant(req, res) {
+    const tenant = await apiDb.update_tenant(req, res);
+    if(tenant) {
+        res.send(204);
+    } else {
+        res.send(400);
+    }
+}
+
+export async function delete_tenant(req, res) {
+    await apiDb.delete_tenant(req, res);
+    res.send(200);
 }
 
 /**
