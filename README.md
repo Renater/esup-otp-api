@@ -51,7 +51,7 @@ More specifically:
 - Open "/users/\*" to the outside. These APIs are used by the mobile application for the push method, and by the browser for authentication.
 - Open "/sockets/\*" and "/js/\*" to the outside. These APIs are used by the browser for authentication.
 - Open "/protected/\*" to esup-otp-manager and all applications relying on the API for authentication (CAS, IdP, etc.).
-- Open "/admin/\*" and "/tenants/\*" to esup-otp-manager only.
+- Open "/admin/\*" to esup-otp-manager only.
 
 If you wish, you can also open "/openapi.json" and "/api-docs/\*" to benefit from a swagger describing the main APIs.
 
