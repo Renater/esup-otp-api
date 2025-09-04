@@ -134,19 +134,23 @@ async function initialize_tenant_model(connection) {
  * @param req requete HTTP contenant le nom la personne recherchee
  * @param res response HTTP
  */
-export async function find_user_by_id(uid) {
+export async function find_user_by_id(uid, disable_auto_create = false) {
     const userPreferences = await UserPreferences.findOne({ 'uid': uid });
     if (userPreferences) {
         // to call update_active_methods() and save potential changes
         await save_user(userPreferences);
         return userPreferences;
     } else {
-        return create_user(uid);
+        if (disable_auto_create) {
+            return;
+        } else {
+            return create_user(uid);
+        }
     }
 }
 
 export async function find_user(req) {
-    return find_user_by_id(req.params.uid);
+    return find_user_by_id(req.params.uid, req.params.disableAutoCreate);
 }
 
 /**
