@@ -74,6 +74,10 @@ export function emitUserAuth(uid, otp) {
     io.to(userRoom(uid)).emit('userAuth', { code: "Ok", otp, });
 }
 
+export function emitUserAuthReject(uid, timeout) {
+    io.to(userRoom(uid)).emit('userAuthReject', { code: "Ok", timeout, });
+}
+
 function managerRoom(tenant) {
     return "tenant-" + tenant.id;
 }
