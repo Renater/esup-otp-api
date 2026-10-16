@@ -410,8 +410,10 @@ export async function reject_authentication(user, req, res) {
     user.push.validity_time = null;
     await apiDb.save_user(user);
 
+    sockets.emitUserAuthReject(user.uid, user.push.timeout);
     res.send({
         "code": "Ok",
+        "timeout": new_timeout
     });
 }
 
